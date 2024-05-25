@@ -21,17 +21,19 @@ fun rawStats(trns: List<CalcTrn>): RawStats {
         when (trn.type) {
             TransactionType.Income -> {
                 incomesCount++
-                incomes.aggregate(trn)
+//                val hey: Short = 44
+//                incomes["USD"]?.plus(hey)
+                incomes.aggregateTrn(trn)
             }
             TransactionType.Expense -> {
                 expensesCount++
-                expenses.aggregate(trn)
+                expenses.aggregateTrn(trn)
             }
         }
         if (trn.time > newestTrnTime) {
             newestTrnTime = trn.time
         }
-    }
+    } //for loop ends here *
 
     return RawStats(
         incomes = incomes,
@@ -59,8 +61,8 @@ infix operator fun RawStats.plus(other: RawStats): RawStats {
         map2: Map<CurrencyCode, Double>
     ): Map<CurrencyCode, Double> {
         val sum = mutableMapOf<CurrencyCode, Double>()
-        map1.forEach(sum::aggregate)
-        map2.forEach(sum::aggregate)
+        map1.forEach(sum::aggregateWithCurrencyAndAmount)
+        map2.forEach(sum::aggregateWithCurrencyAndAmount)
         return sum
     }
 
@@ -73,15 +75,17 @@ infix operator fun RawStats.plus(other: RawStats): RawStats {
     )
 }
 
-private fun MutableMap<CurrencyCode, Double>.aggregate(
+private fun MutableMap<CurrencyCode, Double>.aggregateTrn(
     trn: CalcTrn
-) = aggregate(currency = trn.currency, amount = trn.amount)
+) = aggregateWithCurrencyAndAmount(keyCurrencyCode = trn.currency, amount = trn.amount)
 
-private fun MutableMap<CurrencyCode, Double>.aggregate(
-    currency: CurrencyCode,
-    amount: Double,
+private fun MutableMap<CurrencyCode, Double>.aggregateWithCurrencyAndAmount(
+    keyCurrencyCode: CurrencyCode,
+    amount: Double
 ) {
-    compute(currency) { _, oldValue ->
+    //_ is the parameter name for the key which is the currency
+    //old value is the current value associated with the key
+    compute(keyCurrencyCode) { _, oldValue ->
         (oldValue ?: 0.0) + amount
     }
 }
